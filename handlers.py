@@ -89,7 +89,8 @@ async def handle_waiting_for_choise(message: types.Message):
                 'выбрать муниципальное образований /subscribe \n'
                 'подписаться на все муниципальные обазования /subscribe_all \n'
                 'отказаться от всех подписок /cancel_subscriptions \n'
-                'посмотреть мои подписки /my_subscriptions')
+                'посмотреть мои подписки /my_subscriptions\n'
+                'обратиться в техническую поддержку /support')
     await message.answer(response, parse_mode='HTML')
 
 
