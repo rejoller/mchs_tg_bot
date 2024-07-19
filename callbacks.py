@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import Municipalities, Subscriptions
 from handlers import Form
 from datetime import datetime as dt
-
+from images import main_photo
 from images import map_image
 from bot import bot
 
@@ -70,4 +70,20 @@ async def handle_waiting_for_choise(query: types.CallbackQuery, state: FSMContex
     await session.commit()
 
     await bot.delete_message(chat_id=user_id, message_id= query.message.message_id)
+
+
+
+@callback_router.callback_query(F.data == 'main_menu')
+async def handle_waiting_for_choise(query: types.CallbackQuery, state: FSMContext, session: AsyncSession):
+    await bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
+    
+    caption = ("Вы вернулись в главное меню бота по инцидентам МЧС Красноярского края. Чтобы подписаться на одно из муниципальных "
+               "образований для получения новостей воспользуйтесь командой /subscribe \n Чтобы подписаться "
+               "на все обновления нажмите на команду /subscribe_all\n")
+    await state.clear()
+
+    await query.message.answer_photo(caption=caption, photo=main_photo)
+    
+    
+    
     

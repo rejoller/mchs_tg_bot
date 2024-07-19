@@ -7,7 +7,6 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram import F, types, Router
 
-
 from datetime import datetime as dt
 
 import pandas as pd
@@ -15,7 +14,7 @@ from utils.df_modifier import modify_dataframe
 from utils.message_spitter import split_message
 from utils.response_maker import response_maker
 from utils.result_df_maker import result_df_maker
-from images import main_photo, map_image
+from images import main_photo, map_image, support_menu
 
 from database.models import Municipalities, Users, Subscriptions, Messages, Fires
 from email_checker import fetch_and_save_files
@@ -31,8 +30,10 @@ main_router = Router()
 
 class Form(StatesGroup):
     waiting_for_munic = State()
+    pre_support = State()
+    support = State()
 
-
+'''
 @main_router.message(F.animation)
 async def echo_gif(message: Message):
     file_id = message.animation.file_id
@@ -43,8 +44,7 @@ async def echo_gif(message: Message):
 @main_router.message(F.photo)
 async def get_photo_id(message: Message):
     await message.reply(text=f"{message.photo[-1].file_id}")
-
-
+'''
 @main_router.message(CommandStart())
 async def handle_start(message: Message, state: FSMContext, session: AsyncSession):
     await state.clear()
@@ -77,7 +77,7 @@ async def handle_start(message: Message, state: FSMContext, session: AsyncSessio
     builder.attach(InlineKeyboardBuilder.from_markup(markup))
 
     caption = ("Это бот по инцидентам МЧС Красноярского края. Чтобы подписаться на одно из муниципальных "
-               "образований для получения новостей воспользуйтесь командой /subscribe \n Чтобы подписатья "
+               "образований для получения новостей воспользуйтесь командой /subscribe \n Чтобы подписаться "
                "на все обновления нажмите на команду /subscribe_all\n")
 
     await message.answer_photo(caption=caption, reply_markup=markup, photo=main_photo)
@@ -239,7 +239,23 @@ async def handle_cancel_all_subscriptions(message: Message, state: FSMContext, s
     await session.execute(delete_subs)
     await session.commit()
     await message.answer('Вы отписались от всего😕')
-        
+
+@main_router.message(Command('support'))
+async def handle_cancel_all_subscriptions(message: Message, state: FSMContext, session: AsyncSession):
+    await state.set_state(Form.support)
+    builder = InlineKeyboardBuilder()
+
+    markup = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text='В главное меню', callback_data='main_menu')]
+    ])
+
+    builder.adjust(1)
+    builder.attach(InlineKeyboardBuilder.from_markup(markup))
+    caption = ('Напишите свое сообщение в техническую поддержку или вернитесь в главное меню')
+    
+    await message.answer_photo(photo=support_menu, caption = caption, reply_markup=markup)
+    
 
 @main_router.message(Command('last_news'))
 async def manual_check_news(message: Message, session: AsyncSession):

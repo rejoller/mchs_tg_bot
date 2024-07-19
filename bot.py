@@ -16,8 +16,6 @@ bot = Bot(bot_token)
 storage = RedisStorage.from_url("redis://localhost:6379/2")
 
 
-
-
 async def on_startup():
     from email_checker import fetch_and_save_files
     from database.engine import session_maker
@@ -34,9 +32,16 @@ async def main():
     dp = Dispatcher(storage = storage)
     from handlers import main_router
     from callbacks import callback_router
+    from support.adminmode import support_admin_router
+    from support.usermode import support_user_router
+    
     dp.update.middleware(DataBaseSession(session_pool=session_maker))
+    
     dp.include_router(main_router)
     dp.include_router(callback_router)
+    dp.include_router(support_admin_router)
+    dp.include_router(support_user_router)
+    
     dp.message.middleware(LoggingMiddleware())
     scheduler = AsyncIOScheduler(timezone=ZoneInfo("Asia/Krasnoyarsk"))
     scheduler.add_job(on_startup, 'interval', minutes=interval_min)
