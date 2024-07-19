@@ -33,7 +33,7 @@ class Form(StatesGroup):
     pre_support = State()
     support = State()
 
-'''
+
 @main_router.message(F.animation)
 async def echo_gif(message: Message):
     file_id = message.animation.file_id
@@ -44,8 +44,8 @@ async def echo_gif(message: Message):
 @main_router.message(F.photo)
 async def get_photo_id(message: Message):
     await message.reply(text=f"{message.photo[-1].file_id}")
-'''
-@main_router.message(CommandStart())
+
+@main_router.message(CommandStart(), F.chat.type == 'private')
 async def handle_start(message: Message, state: FSMContext, session: AsyncSession):
     await state.clear()
     user_id = message.from_user.id
@@ -83,7 +83,7 @@ async def handle_start(message: Message, state: FSMContext, session: AsyncSessio
     await message.answer_photo(caption=caption, reply_markup=markup, photo=main_photo)
 
 
-@main_router.message(Command('help'))
+@main_router.message(Command('help'), F.chat.type == 'private')
 async def handle_waiting_for_choise(message: types.Message):
     response = ('Основные команды:\n\n'
                 'выбрать муниципальное образований /subscribe \n'
@@ -94,7 +94,7 @@ async def handle_waiting_for_choise(message: types.Message):
     await message.answer(response, parse_mode='HTML')
 
 
-@main_router.message(Command('subscribe'))
+@main_router.message(Command('subscribe'), F.chat.type == 'private')
 async def handle_waiting_for_choise(message: types.Message, state: FSMContext, session: AsyncSession):
 
     subscribe_query = select(Municipalities.map_id, Municipalities.municipality_name).order_by(
@@ -121,7 +121,7 @@ async def handle_waiting_for_choise(message: types.Message, state: FSMContext, s
     await state.update_data(all_municipalities=[mun[1] for mun in all_municipalities])
 
 
-@main_router.message(StateFilter(Form.waiting_for_munic))
+@main_router.message(StateFilter(Form.waiting_for_munic), F.chat.type == 'private')
 async def subscribe(message: types.Message, state: FSMContext, session: AsyncSession):
     selected_mun = message.text
     user_id = message.from_user.id
@@ -179,7 +179,7 @@ async def subscribe(message: types.Message, state: FSMContext, session: AsyncSes
         await message.answer('Пожалуйста, выберите муниципальное образование из предложенных.')
 
 
-@main_router.message(Command('subscribe_all'))
+@main_router.message(Command('subscribe_all'), F.chat.type == 'private')
 async def handle_sub_to_all_munic(message: types.Message, state: FSMContext, session: AsyncSession):
     user_id = message.from_user.id
 
@@ -205,7 +205,7 @@ async def handle_sub_to_all_munic(message: types.Message, state: FSMContext, ses
     await message.answer('Вы подписались на все муниципальные образования')
 
 
-@main_router.message(Command('my_subscriptions'))
+@main_router.message(Command('my_subscriptions'), F.chat.type == 'private')
 async def handle_my_subscriptions(message: Message, state: FSMContext, session: AsyncSession):
     await state.clear()
     user_id = message.from_user.id
@@ -232,7 +232,7 @@ async def handle_my_subscriptions(message: Message, state: FSMContext, session: 
         await message.answer(message_text, parse_mode='HTML')
 
 
-@main_router.message(Command('cancel_subscriptions'))
+@main_router.message(Command('cancel_subscriptions'), F.chat.type == 'private')
 async def handle_cancel_all_subscriptions(message: Message, state: FSMContext, session: AsyncSession):
     await state.clear()
     user_id = message.from_user.id
@@ -241,7 +241,7 @@ async def handle_cancel_all_subscriptions(message: Message, state: FSMContext, s
     await session.commit()
     await message.answer('Вы отписались от всего😕')
 
-@main_router.message(Command('support'))
+@main_router.message(Command('support'), F.chat.type == 'private')
 async def handle_cancel_all_subscriptions(message: Message, state: FSMContext, session: AsyncSession):
     await state.set_state(Form.support)
     builder = InlineKeyboardBuilder()
@@ -258,7 +258,7 @@ async def handle_cancel_all_subscriptions(message: Message, state: FSMContext, s
     await message.answer_photo(photo=support_menu, caption = caption, reply_markup=markup)
     
 
-@main_router.message(Command('last_news'))
+@main_router.message(Command('last_news'), F.chat.type == 'private')
 async def manual_check_news(message: Message, session: AsyncSession):
     email_id = await fetch_and_save_files(session)
     user_id = message.from_user.id
